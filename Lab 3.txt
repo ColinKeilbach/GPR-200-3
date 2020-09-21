@@ -12,7 +12,8 @@ void calcViewport(out vec2 viewport, out vec2 ndc, out vec2 uv,
                   in float viewportHeight, in vec2 fragCoord, in vec2 resolution)
 {
     // inverse (reciprocal) resolution = 1 / resolution
-    resolutionInv = 1.0 / resolution;
+    resolutionInv = 1.0 / resolution; 
+//Division is slower than Multiplication, this does the division onces then doesn't need to use it again
     
     // aspect ratio = screen width / screen height
     aspect = resolution.x * resolutionInv.y;
@@ -54,6 +55,37 @@ vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
     return rayDirection;
 }
 
+// dummy function
+vec4 add(in int index) {
+    
+    // do stuff
+    //
+    //
+    //
+    return vec4(float(index));
+}
+
+float pow64(float x) {
+    x *= x; // ^2
+    x *= x; // ^4
+    x *= x; // ^8
+    x *= x; // ^16
+    x *= x; // ^32
+    x *= x; // ^64
+    
+    return x;
+}
+
+float lenSq(in vec2 x) {
+    return dot(x, x);
+}
+float lenSq(in vec3 x) {
+    return dot(x, x);
+}
+float lenSq(in vec4 x) {
+    return dot(x, x);
+}
+
 // mainImage: process the current pixel (exactly one call per pixel)
 //    fragColor: output final color for current pixel
 //    fragCoord: input location of current pixel in image (in pixels)
@@ -81,6 +113,84 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     //fragColor = vec4(viewport, 0.0, 0.0);
     //fragColor = vec4(ndc, 0.0, 0.0);
     //fragColor = vec4(uv, 0.0, 0.0);
+    
+    
+    
+    // EFFICIENCY TIPS
+    //Always try to optimize conditionals
+    //float a = fragCoord.x + 2.0; // = 3.0: parallel
+    //
+    //float b = a >= 0.0 ? +a : -a; //Same as below
+    ///*
+	//if ( a >= 0 ){
+	//	b += a;
+	//}else{
+	//	b -= a;
+	//}
+	//*/
+    //
+    //if a was a constant and would never be true then the compiler would remove the if statement
+    //if (a >= 50.0){ // parallel
+    //    // do stuff
+    //} else {
+    //    // do stuff
+    //}
+    //Always put the more likely stuff first
+    //Can save time
+    //
+    //vec4 result = vec4(0.0);
+    //int numSamples = 8;
+    //int i = numSamples;
+    //for (i = 0; i < numSamples; i++) //i++ holds the previous value pf i
+    //for (i = 0; i < numSamples; ++i) //it is faster to check a number against 0
+    //                                 //because it only checks if the number is possitive or negative
+    ////This is the final version of the function
+    //for (i = numSamples - 1; i >= 0; +--) {
+    //    result += vec4(float(i));
+    //}
+    //
+    //This is called unrolling
+    //This is the fastest version of the 'for' loop above
+    //this manually does the 'for' loop
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //result += add(--i);
+    //
+    // Don't do these
+    // ***EXAMPLES
+    //float aSq = a * a;     // don't use pow(a, 2.0); //only ever use if you do not know the exponent
+    //float aCu = aSq * a;   // a * a * a
+    //float a4 = aSq * aSq;  // a * a * a * a
+    // Compiler likes squaring
+    //a *= a; // Square a
+    //a *= a; // a^4
+    //a *= a; // a^8
+    //a = pow64(a);
+    //
+    //float len2 = lenSq(rayDirenction);
+    //    //dot(rayDirection, rayDirection); //dot function is built into the code so it is faster
+    //       //  rayDirection.x * rayDirection.x
+    //       //+ rayDirection.y + rayDirection.y
+    //       //+ rayDirection.z + rayDirection.z;
+    //    //length(rayDirection) * length(rayDirection); //length does sqrt which is slow
+    //
+    //vec2 s = vec2(rayDirection.x, rayDirection.y);
+    //vec2 s = rayDirection.xy;
+    //vec2 s = rayDirection.yx; //this will return vec2(rayDirection.y, rayDirection.x) //swizzling
+    //
+    //More Swizzling
+    //vec3 s3 = rayDirection.zzx; //duplication: not writable
+    //vec3 s3 = rayDirection.yxz;
+    //vec3 s3 = rayDirection.zxy;
+    //vec3 s3 = rayDirection.yzx;
+    //rayDirection.yzx = rayDirection.xyz; // no duplication: writable
+    //
+    //vec4 s4 = len2.xxxx;
 }
 
 /*
