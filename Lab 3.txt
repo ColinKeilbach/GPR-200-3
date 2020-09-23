@@ -1,15 +1,24 @@
 struct hitRecord {
-    vec4 point;  //Point that got hit
-    vec4 normal; //Surface normal for that point
-    float t;     //Time on ray of hit
+    vec4 point;     //Point that got hit
+    vec4 normal;    //Surface normal for that point
+    float t;        //Time on ray of hit
+    bool frontFace; //This will tell if the ray hit the front or back face
 };
+    
+//This tells if it is the front or back face
+void setFaceNormal(in vec4 rayDirection, in vec4 outwardNormal, out hitRecord hit) {
+    //Checks if it hit the front face
+    hit.frontFace = dot(rayDirection, outwardNormal) < 0.0;
+    //if the ray did not hit the front face then the normal is set to negative
+    hit.normal = hit.frontFace ? outwardNormal : -outwardNormal; 
+}
     
 //This will be the sphere "class"
 struct sphere {
-    vec4 center;   //Center point
-    float radius;  //Radius from center
-    hitRecord hit; //Hit data
-    bool gotHit;   //If it was hit
+    vec4 center;        //Center point
+    float radius;       //Radius from center
+    hitRecord hit;      //Hit data
+    bool gotHit;        //If it was hit
 };
 
 //This will calculate the Sphere
@@ -31,7 +40,8 @@ bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin, flo
             //Setting hitRecord variable
             rec.t = temp;
             rec.point = rayOrigin + (rayDirection * rec.t);
-            rec.normal = (rec.point - center) / radius;
+            vec4 outwardNormal = (rec.point - center) / radius;
+            setFaceNormal(rayDirection, outwardNormal, rec);
             return true; //Did hit
         }
 
@@ -40,7 +50,8 @@ bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin, flo
             //Setting hitRecord variable
             rec.t = temp;
             rec.point = rayOrigin + (rayDirection * rec.t);
-            rec.normal = (rec.point - center) / radius;
+            vec4 outwardNormal = (rec.point - center) / radius;
+            setFaceNormal(rayDirection, outwardNormal, rec);
             return true; //Did hit
         }
     }
@@ -114,14 +125,13 @@ vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
     //Checks if the ray is hitting the main sphere
     if(main.gotHit) {
         //Calculates the surface normal
-        vec4 normal = unitVector((rayOrigin + rayDirection * main.hit.t) - vec4(0.0, 0.0, -1.0, 1.0));
         return 0.5 * vec4(main.hit.normal.x + 1.0, main.hit.normal.y + 1.0, main.hit.normal.z + 1.0, 1.0); 
         //If the ray hits the sphere it makes it a gradient based off of the surface normal
     }
     
     //Initializes Ground Sphere
     sphere ground;
-    ground.center = vec4(0.0, -100.5, -1.0, 1.0);
+    ground.center = vec4(0.0, -100.5, -0.1, 1.0);
     ground.radius = 100.0;
     ground.gotHit = hitSphere(ground.center, ground.radius, rayDirection, rayOrigin, 5.0, 0.0, ground.hit);
     
