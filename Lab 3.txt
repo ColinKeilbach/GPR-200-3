@@ -10,7 +10,7 @@ struct sphere {
     float radius;  //Radius from center
     hitRecord hit; //Hit data
     bool gotHit;   //If it was hit
-}
+};
 
 //This will calculate the Sphere
 bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin, float tMax, float tMin, out hitRecord rec) {
@@ -107,7 +107,7 @@ vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
 {
     //Initializes Main Sphere
     sphere main;
-    main.center = vec4(0.0, 0.0, -5.0, 1.0);
+    main.center = vec4(0.0, 0.0, -1.0, 1.0);
     main.radius = 0.5;
     main.gotHit = hitSphere(main.center, main.radius, rayDirection, rayOrigin, 5.0, 0.0, main.hit);
     
