@@ -1,3 +1,9 @@
+struct hitRecord {
+    vec4 point;
+    vec4 normal;
+    float t;
+};
+
 // calcViewport: calculate the viewing plane (viewport) coordinate
 //    viewport:       output viewing plane coordinate
 //    ndc:            output normalized device coordinate
@@ -51,16 +57,39 @@ vec4 unitVector(vec4 vector) {
 }
 
 //This will calculate the Sphere
-bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin) {
+bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin, float tMax, float tMin, out hitRecord rec) {
     vec4 sphereOrigin = rayOrigin - center; //This gets the center of the sphere relative to the camera
     
     //These are used to get the discriminant
     float a = dot(rayDirection, rayDirection);
-    float b = 2.0 * dot(sphereOrigin, rayDirection);
+    float halfB = dot(sphereOrigin, rayDirection);
     float c = dot(sphereOrigin, sphereOrigin) - radius * radius;
+    float discriminant = halfB * halfB - a * c;
     
-    float discriminant = b * b - 4.0 * a * c; //This will tell if the ray hit the sphere
-    return (discriminant > 0.0); //returns if the ray hit the sphere
+    //Check the discriminant
+    if (discriminant > 0.0) {
+        float root = sqrt(discriminant); //Do slow operation once
+
+        float temp = (-halfB - root) / a; // Time outside of the sphere
+        if (temp < tMax && temp > tMin) { //Only counts the hit if it is in the range tMax - tMin
+            //Setting hitRecord variable
+            rec.t = temp;
+            rec.point = rayOrigin + (rayDirection * rec.t);
+            rec.normal = (rec.point - center) / radius;
+            return true; //Did hit
+        }
+
+        temp = (-halfB + root) / a; // Time inside the sphere
+        if (temp < tMax && temp > tMin) { //Only counts the hit if it is in the range tMax - tMin
+            //Setting hitRecord variable
+            rec.t = temp;
+            rec.point = rayOrigin + (rayDirection * rec.t);
+            rec.normal = (rec.point - center) / radius;
+            return true; //Did hit
+        }
+    }
+
+    return false; //Did not hit
 }
 
 // calcColor: calculate the color of a pixel given a ray
@@ -68,11 +97,30 @@ bool hitSphere(vec4 center, float radius, vec4 rayDirection, vec4 rayOrigin) {
 //    rayOrigin:    input ray origin
 vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
 {
-    //Checks for the sphere
-    if(hitSphere(vec4(0.0, 0.0, -1.0, 1.0), 0.5, rayDirection, rayOrigin)) {
-        return vec4(1.0, 0.0, 0.0, 1.0); //If the ray hits the sphere it makes it red
+    //Calculates the sphere
+    hitRecord rec1;
+    bool sphere1 = hitSphere(vec4(0.0, 0.0, -1.0, 1.0), 0.5, rayDirection, rayOrigin, 5.0, 0.0, rec1);
+    
+    //Checks if the ray is hitting the sphere
+    if(sphere1) {
+        //Calculates the surface normal
+        vec4 normal = unitVector((rayOrigin + rayDirection * rec1.t) - vec4(0.0, 0.0, -1.0, 1.0));
+        return 0.5 * vec4(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0, 1.0); //If the ray hits the sphere 
+                                                                                //it makes it a gradient based
+                                                                                //of off the surface normal
     }
-    //This code creates a gradient (blue to white across the y value)
+    
+    //Calculates the ground sphere
+    hitRecord rec2;
+    bool sphere2 = hitSphere(vec4(0.0, -100.5, -1.0, 1.0), 100.0, rayDirection, rayOrigin, 5.0, 0.0, rec1);
+    
+    //Checks if the ray is hitting the sphere
+    if(sphere2) {
+        //Calculates the surface normal
+        return vec4(0.0, 0.75, 0.0, 0.25);
+    }
+    
+    //This code creates the background gradient (blue to white across the y value)
     vec4 unitDirection = unitVector(rayDirection);
     float t = 0.5 * (unitDirection.y + 1.0);
     return (1.0 - t) * vec4(1.0) + t * vec4(0.5, 0.7, 1.0, 1.0);
