@@ -196,9 +196,31 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
                  viewportHeight, fragCoord, iResolution.xy);
     calcRay(rayDirection, rayOrigin,
             viewport, focalLength);
-
-    // color
-    fragColor = calcColor(rayDirection, rayOrigin);
+    
+    //Color
+    fragColor = calcColor(rayDirection, rayOrigin);//Original Ray
+    
+    //Shifted up
+    rayDirection.x += 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted right
+    rayDirection.x -= 0.005; 
+    rayDirection.y += 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted down
+    rayDirection.x -= 0.005; 
+    rayDirection.y -= 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted left
+    rayDirection.x += 0.005; 
+    rayDirection.y -= 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin); 
+    
+    //Get color
+    fragColor *= 0.2;
 
     // TEST COLOR:
     //  -> what do the other things calculated above look like?
