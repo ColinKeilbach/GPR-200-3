@@ -147,6 +147,56 @@ vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
     return (1.0 - t) * vec4(1.0) + t * vec4(0.5, 0.7, 1.0, 1.0);
 }
 
+//Checks 8 points on the pixel and adverages the color
+vec4 antialiasing(vec4 rayDirection, vec4 rayOrigin) {
+    
+    //Color
+    vec4 fragColor = vec4(0.0);
+    
+    //Shifted up
+    rayDirection.y += 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted right
+    rayDirection.y -= 0.005; 
+    rayDirection.x += 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted down
+    rayDirection.y -= 0.005; 
+    rayDirection.x -= 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted left
+    rayDirection.y += 0.005; 
+    rayDirection.x -= 0.005; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted up and right
+    rayDirection.x += 0.005;
+    rayDirection.y += 0.01; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted down and left
+    rayDirection.y -= 0.01; 
+    rayDirection.x -= 0.01; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted up and left
+    rayDirection.y += 0.01; 
+    fragColor += calcColor(rayDirection, rayOrigin);
+    
+    //Shifted down and left
+    rayDirection.y += 0.01; 
+    rayDirection.x += 0.01; 
+    fragColor += calcColor(rayDirection, rayOrigin); 
+    
+    //Get color
+    fragColor *= 0.125;
+    
+    return fragColor;
+}
+
 // dummy function
 vec4 add(in int index) {
     
@@ -197,30 +247,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     calcRay(rayDirection, rayOrigin,
             viewport, focalLength);
     
-    //Color
-    fragColor = calcColor(rayDirection, rayOrigin);//Original Ray
-    
-    //Shifted up
-    rayDirection.x += 0.005; 
-    fragColor += calcColor(rayDirection, rayOrigin);
-    
-    //Shifted right
-    rayDirection.x -= 0.005; 
-    rayDirection.y += 0.005; 
-    fragColor += calcColor(rayDirection, rayOrigin);
-    
-    //Shifted down
-    rayDirection.x -= 0.005; 
-    rayDirection.y -= 0.005; 
-    fragColor += calcColor(rayDirection, rayOrigin);
-    
-    //Shifted left
-    rayDirection.x += 0.005; 
-    rayDirection.y -= 0.005; 
-    fragColor += calcColor(rayDirection, rayOrigin); 
-    
-    //Get color
-    fragColor *= 0.2;
+    //This runs the antialiasing on the final output
+    fragColor = antialiasing(rayDirection, rayOrigin);
 
     // TEST COLOR:
     //  -> what do the other things calculated above look like?
